@@ -20,6 +20,7 @@ export class AppGateway
 
   handleConnection(@ConnectedSocket() client: Socket) {
     console.log(`Client connected: ${client.id}`);
+    console.log(`Client data: ${client.data}`);
   }
   handleDisconnect() {}
 
