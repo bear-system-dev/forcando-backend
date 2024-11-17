@@ -3,7 +3,6 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -33,24 +32,33 @@ export class AppGateway
   handleConnection(@ConnectedSocket() client: Socket) {
     const clientId = String(client.id);
     const clientName = String(client.handshake.query?.name);
+    if (!clientName || clientName.length <= 0)
+      return client.emit('error', 'Você deve fornecer um nome de jogador');
+
+    const playerNames = [];
+    this.players.forEach((player) => {
+      playerNames.push(player.name);
+    });
     console.log(`ENTROU --> name: ${clientName} || socketId: ${clientId}`);
     this.players.set(`${clientId}`, { name: clientName });
+
+    client.join('game');
+    this.io.in('game').emit('join', clientName);
+
     console.log(this.players);
+    return client.emit('player names', playerNames);
   }
+
   handleDisconnect(@ConnectedSocket() client: Socket) {
     const clientId = String(client.id);
     const clientName = String(client.handshake.query?.name);
     console.log(`SAIU --> name: ${clientName} || socketId: ${clientId}`);
     const playerRemoved = this.players.delete(clientId);
+    client.leave('game');
+    this.io.in('game').emit('leave', clientName);
     console.log(
       `Removido: ${playerRemoved} || Existe: ${this.players.has(clientId)}`,
     );
     console.log(this.players);
-  }
-
-  @SubscribeMessage('message')
-  handleMessage(client: Socket, payload: object) {
-    console.log(`Client: ${client.id} || Payload: ${payload}`);
-    return client.emit('message', 'Hello World');
   }
 }

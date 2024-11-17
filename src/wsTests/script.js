@@ -9,8 +9,16 @@ document.getElementById('bnt').addEventListener('click', () => {
 
   socket = io(`http://localhost:3000/game?name=${name}`);
 
-  socket.emit('message', 'asdw');
-  socket.on('message', (data) => {
-    console.log(data);
+  socket.on('join', (data) => {
+    console.log('join: ', data);
+  });
+  socket.on('leave', (data) => {
+    console.log('leave: ', data);
+  });
+  socket.on('player names', (data) => {
+    console.log('player names: ', data);
+  });
+  socket.on('error', (data) => {
+    console.log('error: ', data);
   });
 });
