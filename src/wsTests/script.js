@@ -1,15 +1,16 @@
-const name = 'Lestter';
-const socket = io(`http://localhost:3000/game?name=${name}`);
+let socket;
 
-socket.emit('message', 'asdw');
-socket.on('message', (data) => {
-  console.log(data);
-});
+document.getElementById('bnt').addEventListener('click', () => {
+  const name = document.getElementById('name').value;
+  if (!name || name.length <= 0) {
+    alert('Deve-se fornecer um nome');
+    throw new Error('Deve-se fornecer um nome');
+  }
 
-const nome = 'Lucas';
-const socket2 = io(`http://localhost:3000/game?name=${nome}`);
+  socket = io(`http://localhost:3000/game?name=${name}`);
 
-socket2.emit('message', 'asdw');
-socket2.on('message', (data) => {
-  console.log(data);
+  socket.emit('message', 'asdw');
+  socket.on('message', (data) => {
+    console.log(data);
+  });
 });

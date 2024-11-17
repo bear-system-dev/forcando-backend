@@ -12,27 +12,35 @@ import { Namespace, Socket } from 'socket.io';
 
 type TJogador = {
   name: string | string[];
-  socketId: string;
 };
-
-const jogadores = new Map<TJogador, string>();
 
 @WebSocketGateway({ namespace: 'game', cors: corsOptions })
 export class AppGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
+  private jogadores = new Map<string, TJogador>();
+
   @WebSocketServer()
   io: Namespace;
   afterInit() {}
 
   handleConnection(@ConnectedSocket() client: Socket) {
-    const clientId = client.id;
-    const clientName = client.handshake.query?.name;
-    console.log(`Id: ${clientId} || Name: ${clientName}`);
-    jogadores.set({ name: clientName, socketId: clientId }, `${clientId}`);
-    console.log(jogadores);
+    const clientId = String(client.id);
+    const clientName = String(client.handshake.query?.name);
+    console.log(`ENTROU --> name: ${clientName} || socketId: ${clientId}`);
+    this.jogadores.set(`${clientId}`, { name: clientName });
+    console.log(this.jogadores);
   }
-  handleDisconnect() {}
+  handleDisconnect(@ConnectedSocket() client: Socket) {
+    const clientId = String(client.id);
+    const clientName = String(client.handshake.query?.name);
+    console.log(`SAIU --> name: ${clientName} || socketId: ${clientId}`);
+    const playerRemoved = this.jogadores.delete(clientId);
+    console.log(
+      `Removido: ${playerRemoved} || Existe: ${this.jogadores.has(clientId)}`,
+    );
+    console.log(this.jogadores);
+  }
 
   @SubscribeMessage('message')
   handleMessage(client: Socket, payload: object) {
