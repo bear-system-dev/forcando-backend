@@ -1,5 +1,6 @@
 import {
   ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
@@ -37,6 +38,7 @@ export class AppGateway
     palavra: '',
     tema: '',
   };
+  private letras: string[] = [];
 
   @WebSocketServer()
   io: Namespace;
@@ -73,7 +75,10 @@ export class AppGateway
       `Removido: ${playerRemoved} || Existe: ${this.players.has(clientId)}`,
     );
     console.log(this.players);
-    if (this.players.size === 0) this.palavra.palavra = '';
+    if (this.players.size === 0) {
+      this.palavra.palavra = '';
+      this.letras = [];
+    }
     console.log(`\nPALAVRA: ${this.palavra.palavra}\n`);
   }
 
@@ -86,5 +91,22 @@ export class AppGateway
     }
     console.log(`\nPALAVRA: ${this.palavra.palavra}\n`);
     return client.emit('palavra', this.palavra);
+  }
+
+  @SubscribeMessage('letraDoUsuario')
+  handleLetraDoUsuario(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() letraDoUsuario: string,
+  ) {
+    console.log(letraDoUsuario);
+    this.letras.push(letraDoUsuario);
+    console.log(`letraDoUsuario: ${letraDoUsuario}`);
+    console.log(`letras: ${this.letras}`);
+    return client.broadcast.emit('letraDoUsuario', letraDoUsuario);
+  }
+
+  @SubscribeMessage('letras')
+  handleLetras(@ConnectedSocket() client: Socket) {
+    return client.emit('letras', this.letras);
   }
 }
