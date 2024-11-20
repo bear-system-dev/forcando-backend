@@ -39,6 +39,7 @@ export class AppGateway
     tema: '',
   };
   private letras: string[] = [];
+  
 
   @WebSocketServer()
   io: Namespace;
@@ -98,15 +99,27 @@ export class AppGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() letraDoUsuario: string,
   ) {
-    console.log(letraDoUsuario);
     this.letras.push(letraDoUsuario);
-    console.log(`letraDoUsuario: ${letraDoUsuario}`);
-    console.log(`letras: ${this.letras}`);
-    return client.broadcast.emit('letraDoUsuario', letraDoUsuario);
+    const letra = letraDoUsuario.toLocaleUpperCase()
+    const estaNaPalavra = this.palavra.palavra.toLocaleUpperCase().includes(letra)
+    if(!estaNaPalavra) {
+      return client.broadcast.emit('letraErrada', letra)
+    } else {
+      client.broadcast.emit('letraDoUsuario', letraDoUsuario);
+    }
+    if(this.checkIfWordCompleted()) {
+      return client.emit('ganhou', true)
+    }
   }
 
   @SubscribeMessage('letras')
   handleLetras(@ConnectedSocket() client: Socket) {
     return client.emit('letras', this.letras);
+  }
+
+  checkIfWordCompleted() {
+    const palavraCompleta = this.palavra.palavra.split("").every((letra) => this.letras.includes(letra.toUpperCase()))
+
+    return palavraCompleta
   }
 }
